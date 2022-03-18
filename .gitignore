@@ -1,0 +1,9 @@
+*.mp4
+*.pyth
+*.pyc
+__pycache__/
+build/
+*.csv
+*.log
+*.txt
+
