@@ -7,3 +7,4 @@ build/
 *.log
 *.txt
 
+slowfast.egg-info/PKG-INFO
