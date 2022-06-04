@@ -37,6 +37,7 @@ _LOSSES = {
     "bce": nn.BCELoss,
     "bce_logit": nn.BCEWithLogitsLoss,
     "soft_cross_entropy": SoftTargetCrossEntropy,
+    "mse": nn.MSELoss,
 }
 
 

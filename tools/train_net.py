@@ -3,9 +3,12 @@
 
 """Train a video classification model."""
 
+import math
 import numpy as np
 import pprint
 import torch
+import torch.nn as nn
+from tqdm import tqdm
 from fvcore.nn.precise_bn import get_bn_modules, update_bn_stats
 
 import slowfast.models.losses as losses
@@ -103,10 +106,20 @@ def train_epoch(
             loss = loss_fun(preds, labels)
 
         # check Nan Loss.
-        misc.check_nan_losses(loss)
+        try:
+            misc.check_nan_losses(loss)
+        except Exception as e:
+            print(loss, preds)
+            raise e
 
         # Perform the backward pass.
         optimizer.zero_grad()
+        # print('(preds, labels)', preds.dtype, labels.dtype)
+        # print('LOSS', loss, type(loss))
+        # loss.to(torch.float32)
+        # loss = loss.type(torch.cuda.FloatTensor)
+        # loss = loss.float()
+        # print('LOSS', loss, type(loss))
         scaler.scale(loss).backward()
         # Unscales the gradients of optimizer's assigned params in-place
         scaler.unscale_(optimizer)
@@ -157,27 +170,34 @@ def train_epoch(
                 loss = loss.item()
             else:
                 # Compute the errors.
-                num_topks_correct = metrics.topks_correct(preds, labels, (1, 5))
-                top1_err, top5_err = [
-                    (1.0 - x / preds.size(0)) * 100.0 for x in num_topks_correct
-                ]
+                # print('preds:', preds)
+                # print('preds:', labels)
+                # exit()
+                # num_topks_correct = metrics.topks_correct(preds, labels, (1, 5))
+                # top1_err, top5_err = [
+                #     (1.0 - x / preds.size(0)) * 100.0 for x in num_topks_correct
+                # ]
                 # Gather all the predictions across all the devices.
+                top1_err = loss
+                top5_err = loss
                 if cfg.NUM_GPUS > 1:
                     loss, top1_err, top5_err = du.all_reduce(
-                        [loss, top1_err, top5_err]
+                        # [loss.detach(), top1_err, top5_err]
+                        [loss, loss, loss]
                     )
 
                 # Copy the stats from GPU to CPU (sync point).
+                # loss = loss.item(),
                 loss, top1_err, top5_err = (
-                    loss.item(),
+                   loss.item(),
                     top1_err.item(),
                     top5_err.item(),
                 )
 
             # Update and log stats.
             train_meter.update_stats(
-                top1_err,
-                top5_err,
+                top1_err, # top1_err,
+                top5_err, # top5_err,
                 loss,
                 lr,
                 inputs[0].size(0)
@@ -185,6 +205,7 @@ def train_epoch(
                     cfg.NUM_GPUS, 1
                 ),  # If running  on CPU (cfg.NUM_GPUS == 1), use 1 to represent 1 CPU.
             )
+            # train_meter.reset()
             # write to tensorboard format if available.
             if writer is not None:
                 writer.add_scalars(
@@ -233,7 +254,7 @@ def eval_epoch(val_loader, model, val_meter, cur_epoch, cfg, writer=None):
                     inputs[i] = inputs[i].cuda(non_blocking=True)
             else:
                 inputs = inputs.cuda(non_blocking=True)
-            labels = labels.cuda()
+            labels = labels.cuda().to(torch.float32)
             for key, val in meta.items():
                 if isinstance(val, (list,)):
                     for i in range(len(val)):
@@ -270,12 +291,14 @@ def eval_epoch(val_loader, model, val_meter, cur_epoch, cfg, writer=None):
                     preds, labels = du.all_gather([preds, labels])
             else:
                 # Compute the errors.
-                num_topks_correct = metrics.topks_correct(preds, labels, (1, 5))
+                # num_topks_correct = metrics.topks_correct(preds, labels, (1, 5))
 
-                # Combine the errors across the GPUs.
-                top1_err, top5_err = [
-                    (1.0 - x / preds.size(0)) * 100.0 for x in num_topks_correct
-                ]
+                # # Combine the errors across the GPUs.
+                # top1_err, top5_err = [
+                #     (1.0 - x / preds.size(0)) * 100.0 for x in num_topks_correct
+                # ]
+                top1_err = nn.MSELoss()(preds, labels).to(torch.float32)
+                top5_err = top1_err
                 if cfg.NUM_GPUS > 1:
                     top1_err, top5_err = du.all_reduce([top1_err, top5_err])
 
@@ -494,7 +517,7 @@ def train(cfg):
                 )
 
         # Shuffle the dataset.
-        loader.shuffle_dataset(train_loader, cur_epoch)
+        # loader.shuffle_dataset(train_loader, cur_epoch)
 
         # Train for one epoch.
         epoch_timer.epoch_tic()

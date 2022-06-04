@@ -114,10 +114,11 @@ class Sc3000(torch.utils.data.Dataset):
                     self._path_to_videos.append(
                         os.path.join(self.cfg.DATA.PATH_PREFIX, path)
                     )
-                    self._labels.append(float(label))
+                    self._labels.append(np.float32(label))
+                    # print('self._labels', self._labels)
                     self._spatial_temporal_idx.append(idx)
                     self._video_meta[clip_idx * self._num_clips + idx] = {}
-        # self._labels = np.array(self._labels)
+        # self._labels = np.array(self._labels, dtype=np.float)
         assert (
             len(self._path_to_videos) > 0
         ), "Failed to load Kinetics split {} from {}".format(
