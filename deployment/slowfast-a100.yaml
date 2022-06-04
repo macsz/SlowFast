@@ -1,0 +1,76 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: slowfast-a100-
+  labels:
+    type: interactive
+spec:
+  template:
+    metadata:
+      labels:
+        type: interactive
+      name: pod
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia
+                operator: In
+                values:
+                - tesla-a100
+      containers:
+      - command:
+        - sleep
+        - infinity
+        env:
+        - name: SHELL
+          value: /bin/bash
+        - name: HOME
+          value: /tmp
+        envFrom:
+        - configMapRef:
+            name: proxy-config
+        image: amr-registry.caas.intel.com/aipg/mszankin/slowfast
+        imagePullPolicy: Always
+        name: container
+        resources:
+          limits:
+            cpu: 16
+            memory: 32Gi
+            nvidia.com/gpu: 1
+          requests:
+            cpu: 4
+            memory: 16Gi
+            nvidia.com/gpu: 1
+        stdin: true
+        tty: true
+        volumeMounts:
+        - mountPath: /store
+          name: workdisk
+        - mountPath: /datasets
+          name: datasets
+        - mountPath: /dev/shm
+          name: dshm
+        workingDir: /store/research/SlowFast
+      hostIPC: true
+      restartPolicy: OnFailure
+      tolerations:
+      - key: nvidia
+        operator: Equal
+        value: "ampere"
+        effect: NoSchedule
+      # securityContext:
+      #   fsGroup: 17685
+      #   runAsUser: 11413730
+      volumes:
+      - name: workdisk
+        persistentVolumeClaim:
+          claimName: workdisk
+      - name: datasets
+        persistentVolumeClaim:
+          claimName: datasets
+      - name: dshm
+        emptyDir:
+          medium: Memory
