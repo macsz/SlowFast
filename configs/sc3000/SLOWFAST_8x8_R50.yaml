@@ -20,7 +20,7 @@ DATA_LOADER:
   PIN_MEMORY: True
 DATA:
   PATH_TO_DATA_DIR: dataset/sc3000
-  NUM_FRAMES: 192   # 32  # num_frames (int): number of frames to sample.
+  NUM_FRAMES: 64   # 32  # num_frames (int): number of frames to sample.
   SAMPLING_RATE: 6  # 5 frames / s
   TRAIN_JITTER_SCALES: [256, 320]
   TRAIN_CROP_SIZE: 224
@@ -28,8 +28,8 @@ DATA:
   INPUT_CHANNEL_NUM: [3, 3]
   TARGET_FPS: 30
 SLOWFAST:
-  ALPHA: 16
-  BETA_INV: 32
+  ALPHA: 2
+  BETA_INV: 4
   FUSION_CONV_CHANNEL_RATIO: 2
   FUSION_KERNEL_SZ: 7
 RESNET:
