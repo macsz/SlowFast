@@ -8,3 +8,4 @@ build/
 *.txt
 
 slowfast.egg-info/PKG-INFO
+.vscode/
