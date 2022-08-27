@@ -32,12 +32,29 @@ class SoftTargetCrossEntropy(nn.Module):
             raise NotImplementedError
 
 
+class RMSELoss(nn.Module):
+    def __init__(self, reduction="mean"):
+        super(RMSELoss, self).__init__()
+        self.mse = nn.MSELoss()
+        self.reduction = reduction
+
+    def forward(self,yhat,y):
+        loss = torch.sqrt(self.mse(yhat,y))
+        if self.reduction == "mean":
+            return loss.mean()
+        elif self.reduction == "none":
+            return loss
+        else:
+            raise NotImplementedError
+
+
 _LOSSES = {
     "cross_entropy": nn.CrossEntropyLoss,
     "bce": nn.BCELoss,
     "bce_logit": nn.BCEWithLogitsLoss,
     "soft_cross_entropy": SoftTargetCrossEntropy,
     "mse": nn.MSELoss,
+    "rmse": RMSELoss,
 }
 
 
