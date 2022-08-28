@@ -29,7 +29,7 @@ DATA:
   TARGET_FPS: 30
 SLOWFAST:
   ALPHA: 4
-  BETA_INV: 16
+  BETA_INV: 32
   FUSION_CONV_CHANNEL_RATIO: 2
   FUSION_KERNEL_SZ: 9
 RESNET:
@@ -40,7 +40,7 @@ RESNET:
   TRANS_FUNC: bottleneck_transform
   STRIDE_1X1: False
   NUM_BLOCK_TEMP_KERNEL: [[3, 3], [4, 4], [6, 6], [3, 3]]
-  SPATIAL_STRIDES: [[1, 1], [1, 1], [1, 1], [1, 1]]
+  SPATIAL_STRIDES: [[1, 1], [2, 2], [2, 2], [2, 2]]
   SPATIAL_DILATIONS: [[1, 1], [1, 1], [1, 1], [1, 1]]
 NONLOCAL:
   LOCATION: [[[], []], [[], []], [[], []], [[], []]]
@@ -52,7 +52,7 @@ BN:
 SOLVER:
   BASE_LR: 0.00001 # 0.0001
   LR_POLICY: cosine
-  MAX_EPOCH: 1000
+  MAX_EPOCH: 500
   MOMENTUM: 0.9
   WEIGHT_DECAY: 1e-4
   WARMUP_EPOCHS: 50.0
@@ -64,4 +64,4 @@ MODEL:
   ARCH: slowfast
   MODEL_NAME: SlowFast
   LOSS_FUNC: mse
-  DROPOUT_RATE: 0.7
+  DROPOUT_RATE: 0.6
