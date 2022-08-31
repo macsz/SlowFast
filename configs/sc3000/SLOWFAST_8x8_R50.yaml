@@ -63,5 +63,5 @@ MODEL:
   NUM_CLASSES: 1
   ARCH: slowfast
   MODEL_NAME: SlowFast
-  LOSS_FUNC: mse
+  LOSS_FUNC: focal
   DROPOUT_RATE: 0.6

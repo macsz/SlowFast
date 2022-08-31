@@ -48,12 +48,31 @@ class RMSELoss(nn.Module):
             raise NotImplementedError
 
 
+class WeightedFocalLoss(nn.Module):
+    "Non weighted version of Focal Loss"
+    def __init__(self, alpha=.25, gamma=2, reduction="mean"):
+        super(WeightedFocalLoss, self).__init__()
+        self.alpha = torch.tensor([alpha, 1-alpha])
+        self.gamma = gamma
+        self.mse = nn.MSELoss()
+
+    def forward(self, inputs, targets):
+        #BCE_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
+        loss = torch.sqrt(self.mse(inputs,targets))
+        targets = targets.type(torch.long)
+        #at = self.alpha.gather(0, targets.view(-1))
+        pt = torch.exp(loss)
+        F_loss = (1-pt)**2 * loss
+        return F_loss.mean()
+
+
 _LOSSES = {
     "cross_entropy": nn.CrossEntropyLoss,
     "bce": nn.BCELoss,
     "bce_logit": nn.BCEWithLogitsLoss,
     "soft_cross_entropy": SoftTargetCrossEntropy,
     "mse": nn.MSELoss,
+    "focal": WeightedFocalLoss,
     "rmse": RMSELoss,
 }
 
