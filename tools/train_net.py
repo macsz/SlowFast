@@ -25,6 +25,8 @@ from slowfast.models import build_model
 from slowfast.utils.meters import AVAMeter, EpochTimer, TrainMeter, ValMeter
 from slowfast.utils.multigrid import MultigridSchedule
 
+import wandb
+
 logger = logging.get_logger(__name__)
 
 
@@ -195,6 +197,7 @@ def train_epoch(
                 )
 
             # Update and log stats.
+            wandb.log({'loss': loss, 'cur_epoch': cur_epoch})
             train_meter.update_stats(
                 top1_err, # top1_err,
                 top5_err, # top5_err,
@@ -304,6 +307,7 @@ def eval_epoch(val_loader, model, val_meter, cur_epoch, cfg, writer=None):
 
                 # Copy the errors from GPU to CPU (sync point).
                 top1_err, top5_err = top1_err.item(), top5_err.item()
+                wandb.log({'eval_loss': top1_err})
 
                 val_meter.iter_toc()
                 # Update and log stats.
@@ -427,6 +431,19 @@ def train(cfg):
         cfg (CfgNode): configs. Details can be found in
             slowfast/config/defaults.py
     """
+
+    wandb.init(
+        project="SlowFast",
+        entity="macsz",
+    )
+    
+    #wandb.config = cfg
+    #    {
+    #        'NUM_GPUS': cfg.NUM_GPUS,
+    #        'TRAIN.BATCH_SIZE': cfg.TRAIN.BATCH_SIZE,
+    #        'DATA.PATH_TO_DATA_DIR': cfg.DATA.PATH_TO_DATA_DIR,
+    #    }
+    #)
     # Set up environment.
     du.init_distributed_training(cfg)
     # Set random seed from configs.
