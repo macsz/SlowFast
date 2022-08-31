@@ -10,3 +10,4 @@ build/
 
 slowfast.egg-info/PKG-INFO
 .vscode/
+wandb/
